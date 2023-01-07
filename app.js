@@ -4,8 +4,8 @@ const bodyParser = require("body-parser")
 const ejs = require("ejs")
 require("./db")
 const User = require ("./models/userSchema")
-const bcrypt = require("bcrypt")
-const saltRounds = 10
+const session = require("express-session")
+const passport = require("passport")
 
 const app = express()
 
@@ -14,6 +14,15 @@ app.set("view engine", "ejs")
 app.use(bodyParser.urlencoded({
     extended: true
 }))
+
+app.use(session({
+    secret: "this is my secret",
+    resave: false,
+    saveUninitialized: false
+}))
+
+app.use(passport.initialize())
+app.use(passport.session())
 
 app.get("/", (req,res) => {
     res.render("home")
@@ -27,42 +36,48 @@ app.get("/register", (req,res) => {
     res.render("register")
 })
 
+app.get("/secrets", (req,res) => {
+    if(req.isAuthenticated()){
+        res.render("secrets")
+    }else{
+        res.redirect("/login")
+    }
+})
+
 app.post("/register", (req,res) => {
-
-    bcrypt.hash(req.body.password, saltRounds, (err, hash) => {
-        const newUser = new User({
-            username: req.body.username,
-            password: hash
-        })
-
-        newUser.save((err)=>{
-            if(err){
-                console.log(err)
-            }else{
-                res.render("secrets")
-            }
-        })
-    })
-    
-    
+    User.register({username : req.body.username}, req.body.password, (err,user) => {
+        if(err){
+            console.log(err)
+            res.redirect("/register")
+        }else{
+            passport.authenticate("local")(req,res,() => {
+                res.redirect("/secrets")
+            })
+        }
+    })  
 })
 
 app.post("/login", (req,res) => {
-    const username = req.body.username
-    const password = req.body.password
+    const user = new User({
+        username: req.body.username,
+        password: req.body.password
+    })
 
-    User.findOne({email: username}, (err, foundUser) => {
+    req.login(user, (err) => {
         if(err){
             console.log(err)
-            res.write("Not found")
         }else{
-            if(foundUser){
-                bcrypt.compare(password, foundUser.password, (err, result) => {
-                    if(result){
-                        res.render("secrets")
-                    }
-                })
-            }
+            passport.authenticate("local")(req,res,() => {
+                res.redirect("/secrets")
+            })
+        }
+    })
+})
+
+app.get("/logout", (req,res) => {
+    req.logout(function(err) {
+        if (!err) {
+            res.redirect("/");
         }
     })
 })

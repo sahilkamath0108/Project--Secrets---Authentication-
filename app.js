@@ -7,6 +7,7 @@ const User = require ("./models/userSchema")
 const session = require("express-session")
 const passport = require("passport")
 
+
 const app = express()
 
 app.use(express.static("public"))
@@ -27,6 +28,15 @@ app.use(passport.session())
 app.get("/", (req,res) => {
     res.render("home")
 })
+
+app.get("/auth/google", passport.authenticate("google", {
+    scope: ['profile']
+}))
+
+app.get("/auth/google/secrets", passport.authenticate('google', {failureRedirect: '/login'}),
+    (req,res) => {
+        res.redirect("/secrets")
+    })
 
 app.get("/login", (req,res) => {
     res.render("login")

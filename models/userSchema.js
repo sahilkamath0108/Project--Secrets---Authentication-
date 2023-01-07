@@ -12,8 +12,6 @@ const userSchema = new Schema({
     }
 })
 
-userSchema.plugin(encrypt, {secret : process.env.SECRET, encryptedFields: ['password']})
-
 const User = new mongoose.model("User", userSchema)
 
 module.exports = User

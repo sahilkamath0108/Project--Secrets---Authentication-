@@ -4,7 +4,8 @@ const bodyParser = require("body-parser")
 const ejs = require("ejs")
 require("./db")
 const User = require ("./models/userSchema")
-const encrypt = require("mongoose-encryption")
+const bcrypt = require("bcrypt")
+const saltRounds = 10
 
 const app = express()
 
@@ -27,17 +28,23 @@ app.get("/register", (req,res) => {
 })
 
 app.post("/register", (req,res) => {
-    const newUser = new User({
-        username: req.body.username,
-        password: req.body.password
+
+    bcrypt.hash(req.body.password, saltRounds, (err, hash) => {
+        const newUser = new User({
+            username: req.body.username,
+            password: hash
+        })
+
+        newUser.save((err)=>{
+            if(err){
+                console.log(err)
+            }else{
+                res.render("secrets")
+            }
+        })
     })
-    newUser.save((err)=>{
-        if(err){
-            console.log(err)
-        }else{
-            res.render("secrets")
-        }
-    })
+    
+    
 })
 
 app.post("/login", (req,res) => {
@@ -50,11 +57,11 @@ app.post("/login", (req,res) => {
             res.write("Not found")
         }else{
             if(foundUser){
-                if(foundUser.password === password){
-                    res.render("secrets")
-                }else{
-                    res.write("Wrong password")
-                }
+                bcrypt.compare(password, foundUser.password, (err, result) => {
+                    if(result){
+                        res.render("secrets")
+                    }
+                })
             }
         }
     })

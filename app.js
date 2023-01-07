@@ -4,6 +4,7 @@ const bodyParser = require("body-parser")
 const ejs = require("ejs")
 require("./db")
 const User = require ("./models/userSchema")
+const encrypt = require("mongoose-encryption")
 
 const app = express()
 

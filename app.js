@@ -47,11 +47,38 @@ app.get("/register", (req,res) => {
 })
 
 app.get("/secrets", (req,res) => {
+    User.find({"secret": {$ne: null}}, (err,doc) => {
+        if(err) {
+            console.log(err)
+        }else{
+            if(doc){
+                res.render("secrets", {usersWithSecrets: doc})
+            }
+        }
+    })
+})
+
+app.get("/submit", (req,res) => {
     if(req.isAuthenticated()){
-        res.render("secrets")
+        res.render("submit")
     }else{
         res.redirect("/login")
     }
+})
+
+app.post("/submit", (req,res) => {
+    const submittedSecret = req.body.secret
+
+    User.findById(req.user.id, (err, foundUser) => {
+        if(err){
+            console.log(err)
+        }else{
+            foundUser.secret = submittedSecret
+            foundUser.save(() => {
+                res.redirect("/secrets")
+            })
+        }
+    })
 })
 
 app.post("/register", (req,res) => {

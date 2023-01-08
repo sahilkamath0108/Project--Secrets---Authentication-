@@ -42,8 +42,8 @@ passport.use(new GoogleStrategy({
     callbackURL: "http://localhost:3000/auth/google/secrets",
     userProfileURL: "https://www.googleapis.com/oauth2/v3/userinfo"
   },
-  function(accessToken, refreshToken, profile, cb) {
-    User.findOrCreate({ googleId: profile.id }, function (err, user) {
+  (accessToken, refreshToken, profile, cb) => {
+    User.findOrCreate({ googleId: profile.id }, (err, user) => {
       return cb(err, user);
     });
   }
